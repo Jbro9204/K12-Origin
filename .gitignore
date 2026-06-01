@@ -1,0 +1,21 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# Dependency folders
+node_modules/
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+out/
+

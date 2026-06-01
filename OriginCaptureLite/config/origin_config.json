@@ -1,0 +1,14 @@
+{
+  "scriptVersion": "1.0.0",
+  "defaultStatus": "PENDING MDM AUTOPILOT RELEASE",
+  "schoolFacingCsv": "surface_release_capture.csv",
+  "auditLogCsv": "origin_capture_audit_log.csv",
+  "exceptionsCsv": "logs\\exceptions.csv",
+  "requireOperatorId": true,
+  "requirePoNumber": true,
+  "requireLotNumber": true,
+  "requirePalletId": true,
+  "enableDuplicateDetection": true,
+  "defaultPostCaptureAction": "shutdown"
+}
+
