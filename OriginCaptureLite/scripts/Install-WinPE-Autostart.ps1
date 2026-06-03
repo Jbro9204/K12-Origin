@@ -51,6 +51,13 @@ try {
     Write-Host "Installing auto-launch Startnet.cmd"
     Copy-Item -LiteralPath (Join-Path $scriptRoot 'Startnet.cmd') -Destination $targetStartnet -Force
 
+    $installedStartnet = Get-Content -LiteralPath $targetStartnet -Raw
+    if ($installedStartnet -notmatch 'OriginCapture\\Capture-OriginLite\.cmd') {
+        throw 'Startnet.cmd verification failed. The mounted WinPE image does not contain the Origin Capture auto-launch command.'
+    }
+
+    Write-Host 'Verified Startnet.cmd contains Origin Capture auto-launch command.'
+
     Write-Host 'Committing WinPE boot image'
     & dism.exe /Unmount-Image /MountDir:$mountRoot /Commit | Write-Host
 } catch {
@@ -65,4 +72,3 @@ try {
 Write-Host ''
 Write-Host 'Origin Capture Lite USB is ready.'
 Write-Host 'On boot, WinPE will locate \OriginCapture and launch Capture-OriginLite.cmd automatically.'
-
