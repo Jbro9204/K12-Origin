@@ -347,10 +347,15 @@ do {
         }
 
         Write-Host ''
-        Write-Host 'CAPTURE COMPLETE' -ForegroundColor Green
+        Write-Host '========================================' -ForegroundColor Green
+        Write-Host 'ORIGIN INFO GATHERED' -ForegroundColor Green
+        Write-Host 'Capture log saved.' -ForegroundColor Green
+        Write-Host '========================================' -ForegroundColor Green
         Write-Host "Serial: $($device.SerialNumber)"
         Write-Host "Manufacturer: $($device.Manufacturer)"
         Write-Host "Model: $($device.Model)"
+        Write-Host "Release CSV: $SchoolCsv"
+        Write-Host "Audit Log: $AuditCsv"
     } catch {
         $message = $_.Exception.Message
         Write-OriginException -Path $ExceptionsCsv -Session $Session -ErrorType 'UNEXPECTED_FAILURE' -Device $device -Message $message

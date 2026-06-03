@@ -10,7 +10,7 @@
 6. Wait for Origin Capture Lite to launch.
 7. Enter PO number, lot number, pallet ID, station ID, and operator ID.
 8. Wait for capture to complete.
-9. Confirm the screen shows `CAPTURE COMPLETE`.
+9. Confirm the screen shows `ORIGIN INFO GATHERED`.
 10. Let the device shut down.
 11. Move the device to Captured - Pending MDM Release.
 12. Repeat with the next device.
@@ -41,7 +41,8 @@ These values are reused for every capture during the same boot session.
 The screen shows:
 
 ```text
-CAPTURE COMPLETE
+ORIGIN INFO GATHERED
+Capture log saved.
 Serial: [SERIAL_NUMBER]
 Manufacturer: [MANUFACTURER]
 Model: [MODEL]
@@ -56,4 +57,3 @@ If `DUPLICATE SERIAL DETECTED` appears, do not append another row unless a super
 ## Failed Capture
 
 If capture fails, choose the retry option once. If it fails again, move the unit to exception review and notify a lead.
-

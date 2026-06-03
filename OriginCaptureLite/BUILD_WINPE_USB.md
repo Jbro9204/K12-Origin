@@ -81,6 +81,20 @@ The capture CSV files are created automatically on first run:
 - `E:\OriginCapture\origin_capture_audit_log.csv`
 - `E:\OriginCapture\logs\exceptions.csv`
 
+## Faster Option For An Existing WinPE USB
+
+If the WinPE USB already exists, run this from an elevated PowerShell prompt. Replace `E:` with the USB drive letter:
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass -Force
+& "C:\Path\To\K12-Origin\OriginCaptureLite\scripts\Install-WinPE-Autostart.ps1" -UsbDrive E:
+```
+
+This does two things:
+
+1. Copies the runtime files into `E:\OriginCapture`.
+2. Mounts `E:\sources\boot.wim`, installs `Startnet.cmd`, and commits the image so Origin Capture Lite launches automatically when WinPE boots.
+
 ## 9. Test On Surface Go 2
 
 1. Power off the Surface Go 2.
@@ -91,7 +105,8 @@ The capture CSV files are created automatically on first run:
 6. Confirm Origin Capture Lite launches automatically.
 7. Enter test PO, lot, pallet, station, and operator values.
 8. Confirm serial number, manufacturer, and model are captured.
-9. Confirm CSV files are written under `OriginCapture` on the USB.
+9. Confirm the screen shows `ORIGIN INFO GATHERED`.
+10. Confirm CSV files are written under `OriginCapture` on the USB.
 
 ## 10. Confirm CSV Output
 
@@ -102,4 +117,3 @@ SERIAL_NUMBER,MANUFACTURER,MODEL,CAPTURE_TIME,STATION_ID,OPERATOR_ID,PO_NUMBER,L
 ```
 
 The file is ready to send to the school/client when all rows are reviewed.
-

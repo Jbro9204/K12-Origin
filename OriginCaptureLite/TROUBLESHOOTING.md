@@ -49,6 +49,7 @@ This tool is intentionally built around Microsoft Windows PE because Surface Go 
 
 - Confirm `Startnet.cmd` was copied to `Windows\System32` inside the mounted WinPE image.
 - Confirm the image was unmounted with `/Commit`.
+- For an already-created USB, run `scripts\Install-WinPE-Autostart.ps1 -UsbDrive E:` from an elevated PowerShell prompt, replacing `E:` with the USB drive letter.
 - At the command prompt, run:
 
 ```cmd
@@ -89,4 +90,3 @@ E:\OriginCapture\Capture-OriginLite.cmd
 ```
 
 Replace `E:` with the correct USB drive letter.
-

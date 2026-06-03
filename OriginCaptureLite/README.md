@@ -73,7 +73,8 @@ The CSV files are created automatically if they do not exist.
 4. Boot the target Surface Go 2 from USB.
 5. Enter PO, lot, pallet, station, and operator values.
 6. Capture serial number, manufacturer, and model.
-7. Send `surface_release_capture.csv` to the school/client for release processing.
+7. Confirm the screen shows `ORIGIN INFO GATHERED`.
+8. Send `surface_release_capture.csv` to the school/client for release processing.
 
 ## Data Capture
 
@@ -86,4 +87,3 @@ wmic csproduct get uuid,identifyingnumber,name,vendor
 ```
 
 PowerShell WMI/CIM is used as a fallback when available. No internet access, database, Python, Node, npm, or external package is required.
-
