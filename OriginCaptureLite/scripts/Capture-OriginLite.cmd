@@ -129,5 +129,5 @@ call :WaitForever
 exit /b 0
 
 :WaitForever
-timeout /t 3600 /nobreak >nul
-goto :WaitForever
+cmd /k
+exit /b 0
