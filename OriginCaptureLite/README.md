@@ -81,4 +81,4 @@ wmic bios get serialnumber
 wmic computersystem get manufacturer,model
 ```
 
-PowerShell WMI/CIM is used as a fallback when available. No internet access, database, Python, Node, npm, or external package is required. The model is saved as `DEVICE_INFO`.
+If PowerShell is available, the launcher uses the PowerShell capture script. If PowerShell is not available, the launcher automatically falls back to native CMD plus WMIC capture. No internet access, database, Python, Node, npm, or external package is required. The model is saved as `DEVICE_INFO`.

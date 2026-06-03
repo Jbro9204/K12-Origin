@@ -35,6 +35,10 @@ wmic bios get serialnumber
 
 - If still blank, move the device to exception review.
 
+## PowerShell Not Available
+
+Origin Capture Lite automatically falls back to native CMD plus WMIC capture when PowerShell is missing from WinPE. The USB does not need to be rebuilt only to add PowerShell.
+
 ## Duplicate Serial Detected
 
 - Do not append unless a supervisor confirms.
