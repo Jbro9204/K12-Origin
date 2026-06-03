@@ -33,7 +33,7 @@ if not "%EXIT_CODE%"=="0" (
 exit /b %EXIT_CODE%
 
 :RunBatchCapture
-echo PowerShell is not available. Using native WMIC capture mode.
+echo Capturing device info...
 echo.
 
 if not exist "%SCRIPT_DIR%\logs" mkdir "%SCRIPT_DIR%\logs" >nul 2>nul
