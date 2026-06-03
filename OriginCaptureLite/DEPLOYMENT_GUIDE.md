@@ -34,19 +34,16 @@ Each station should have:
 
 ## Production Controls
 
-- Use a unique `STATION_ID` per workstation.
-- For unattended capture, set `defaultStationId`, `defaultOperatorId`, `defaultPoNumber`, `defaultLotNumber`, and `defaultPalletId` in `origin_config.json` before making each USB.
 - Review `logs\exceptions.csv` daily.
-- Preserve `origin_capture_audit_log.csv` for internal traceability.
 - Send only `surface_release_capture.csv` to the school/client unless otherwise requested.
 
 ## Data Handling
 
-The school-facing CSV contains only the required release fields. The audit log contains extended hardware identity details for internal review.
+The output CSV contains only serial number, manufacturer, and device info.
 
 ## Versioning
 
-The script version is stored in `origin_config.json` and written into `origin_capture_audit_log.csv`.
+The script version is stored in `origin_config.json`.
 
 ## Updating USBs
 

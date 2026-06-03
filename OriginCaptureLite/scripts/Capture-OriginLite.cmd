@@ -19,8 +19,8 @@ if errorlevel 1 (
     echo Rebuild WinPE with PowerShell support or use a Windows PE image that includes PowerShell.
     echo.
     if not exist "%SCRIPT_DIR%\logs" mkdir "%SCRIPT_DIR%\logs" >nul 2>nul
-    >> "%SCRIPT_DIR%\logs\exceptions.csv" echo CAPTURE_TIME,STATION_ID,OPERATOR_ID,PO_NUMBER,LOT_NUMBER,PALLET_ID,ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,MODEL,ERROR_MESSAGE
-    >> "%SCRIPT_DIR%\logs\exceptions.csv" echo "%DATE% %TIME%","","","","","","POWERSHELL_UNAVAILABLE","","","","PowerShell was not available; capture did not run."
+    >> "%SCRIPT_DIR%\logs\exceptions.csv" echo ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE
+    >> "%SCRIPT_DIR%\logs\exceptions.csv" echo "POWERSHELL_UNAVAILABLE","","","","PowerShell was not available; capture did not run."
     cmd /k
     exit /b 1
 )
@@ -36,4 +36,3 @@ if not "%EXIT_CODE%"=="0" (
 )
 
 exit /b %EXIT_CODE%
-

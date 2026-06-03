@@ -78,7 +78,6 @@ copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\config\origin_config.json" "E:\
 The capture CSV files are created automatically on first run:
 
 - `E:\OriginCapture\surface_release_capture.csv`
-- `E:\OriginCapture\origin_capture_audit_log.csv`
 - `E:\OriginCapture\logs\exceptions.csv`
 
 ## Faster Option For An Existing WinPE USB
@@ -104,7 +103,7 @@ This does two things:
 5. Keep holding Volume Down until the Surface logo or spinning dots appear.
 6. Confirm Origin Capture Lite launches automatically.
 7. Confirm no typing is required after the tool launches.
-8. Confirm serial number, manufacturer, and model are captured.
+8. Confirm serial number, manufacturer, and device info are captured.
 9. Confirm the screen shows `ORIGIN INFO GATHERED`.
 10. Confirm CSV files are written under `OriginCapture` on the USB.
 
@@ -113,7 +112,7 @@ This does two things:
 Open `surface_release_capture.csv` in Excel and confirm the columns are exactly:
 
 ```text
-SERIAL_NUMBER,MANUFACTURER,MODEL,CAPTURE_TIME,STATION_ID,OPERATOR_ID,PO_NUMBER,LOT_NUMBER,PALLET_ID,STATUS
+SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO
 ```
 
 The file is ready to send to the school/client when all rows are reviewed.

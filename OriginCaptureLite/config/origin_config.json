@@ -1,19 +1,8 @@
 {
   "scriptVersion": "1.0.0",
-  "defaultStatus": "PENDING MDM AUTOPILOT RELEASE",
   "schoolFacingCsv": "surface_release_capture.csv",
-  "auditLogCsv": "origin_capture_audit_log.csv",
   "exceptionsCsv": "logs\\exceptions.csv",
   "unattendedMode": true,
-  "defaultPoNumber": "UNASSIGNED",
-  "defaultLotNumber": "UNASSIGNED",
-  "defaultPalletId": "UNASSIGNED",
-  "defaultStationId": "AUTO-STATION",
-  "defaultOperatorId": "AUTO-CAPTURE",
-  "requireOperatorId": false,
-  "requirePoNumber": false,
-  "requireLotNumber": false,
-  "requirePalletId": false,
   "enableDuplicateDetection": true,
   "defaultPostCaptureAction": "wait"
 }

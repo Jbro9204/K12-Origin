@@ -16,8 +16,3 @@ Write-Host 'Origin Capture Lite Summary'
 Write-Host "CSV: $schoolCsv"
 Write-Host "Total captured rows: $total"
 Write-Host "Duplicate serial groups: $(@($duplicates).Count)"
-
-$rows | Group-Object STATUS | Sort-Object Name | ForEach-Object {
-    Write-Host "$($_.Name): $($_.Count)"
-}
-

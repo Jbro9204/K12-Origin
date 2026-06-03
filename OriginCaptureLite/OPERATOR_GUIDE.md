@@ -25,19 +25,9 @@ No internal drive boot required
 No wipe, no bypass, capture only
 ```
 
-## Session Values
+## Captured Fields
 
-Auditors do not enter session values at the device. The CSV fields for PO number, lot number, pallet ID, station ID, and operator ID are filled from `origin_config.json`.
-
-Default unattended values are:
-
-```text
-PO_NUMBER=UNASSIGNED
-LOT_NUMBER=UNASSIGNED
-PALLET_ID=UNASSIGNED
-STATION_ID=AUTO-STATION
-OPERATOR_ID=AUTO-CAPTURE
-```
+Auditors do not enter anything at the device. The output CSV contains only serial number, manufacturer, and device info.
 
 ## Successful Capture
 
@@ -48,10 +38,10 @@ ORIGIN INFO GATHERED
 Capture log saved.
 Serial: [SERIAL_NUMBER]
 Manufacturer: [MANUFACTURER]
-Model: [MODEL]
+Device Info: [DEVICE_INFO]
 ```
 
-The default action is to leave the success message on screen so the auditor can confirm the log was saved.
+The default action is to leave the success message on screen so the auditor can confirm the CSV was saved.
 
 ## Duplicate Serial
 
