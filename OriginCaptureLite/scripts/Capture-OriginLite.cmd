@@ -44,19 +44,28 @@ call :GetWmicValue "bios get serialnumber /value" "SerialNumber" SERIAL_NUMBER
 call :GetWmicValue "computersystem get manufacturer /value" "Manufacturer" MANUFACTURER
 call :GetWmicValue "computersystem get model /value" "Model" DEVICE_INFO
 
+if not defined SERIAL_NUMBER call :GetWmicTableValue "bios get serialnumber" SERIAL_NUMBER
+if not defined SERIAL_NUMBER call :GetWmicValue "csproduct get identifyingnumber /value" "IdentifyingNumber" SERIAL_NUMBER
+if not defined SERIAL_NUMBER call :GetWmicTableValue "csproduct get identifyingnumber" SERIAL_NUMBER
+if not defined MANUFACTURER call :GetWmicTableValue "computersystem get manufacturer" MANUFACTURER
+if not defined DEVICE_INFO call :GetWmicTableValue "computersystem get model" DEVICE_INFO
+
 if not defined SERIAL_NUMBER (
+    call :WriteWmicDebug
     call :LogException "CAPTURE_VALIDATION_FAILED" "" "!MANUFACTURER!" "!DEVICE_INFO!" "Serial number is blank."
     call :ShowFailure "Serial number is blank."
     exit /b 1
 )
 
 if not defined MANUFACTURER (
+    call :WriteWmicDebug
     call :LogException "CAPTURE_VALIDATION_FAILED" "!SERIAL_NUMBER!" "" "!DEVICE_INFO!" "Manufacturer is blank."
     call :ShowFailure "Manufacturer is blank."
     exit /b 1
 )
 
 if not defined DEVICE_INFO (
+    call :WriteWmicDebug
     call :LogException "CAPTURE_VALIDATION_FAILED" "!SERIAL_NUMBER!" "!MANUFACTURER!" "" "Device info is blank."
     call :ShowFailure "Device info is blank."
     exit /b 1
@@ -101,6 +110,47 @@ for /f "tokens=1,* delims==" %%A in ('wmic %WMIC_ARGS% 2^>nul') do (
         set "%WMIC_TARGET%=!WMIC_VALUE!"
     )
 )
+exit /b 0
+
+:GetWmicTableValue
+set "WMIC_ARGS=%~1"
+set "WMIC_TARGET=%~2"
+set "%WMIC_TARGET%="
+for /f "skip=1 tokens=* delims=" %%A in ('wmic %WMIC_ARGS% 2^>nul') do (
+    set "WMIC_VALUE=%%A"
+    call :TrimValue WMIC_VALUE
+    if defined WMIC_VALUE (
+        set "%WMIC_TARGET%=!WMIC_VALUE!"
+        exit /b 0
+    )
+)
+exit /b 0
+
+:TrimValue
+set "TRIM_NAME=%~1"
+for /f "tokens=* delims= " %%T in ("!%TRIM_NAME%!") do set "%TRIM_NAME%=%%T"
+exit /b 0
+
+:WriteWmicDebug
+set "DEBUG_PATH=%SCRIPT_DIR%\logs\wmic_debug.txt"
+(
+    echo ORIGIN CAPTURE LITE WMIC DEBUG
+    echo.
+    echo COMMAND: wmic bios get serialnumber
+    wmic bios get serialnumber
+    echo.
+    echo COMMAND: wmic bios get serialnumber /value
+    wmic bios get serialnumber /value
+    echo.
+    echo COMMAND: wmic csproduct get identifyingnumber
+    wmic csproduct get identifyingnumber
+    echo.
+    echo COMMAND: wmic computersystem get manufacturer
+    wmic computersystem get manufacturer
+    echo.
+    echo COMMAND: wmic computersystem get model
+    wmic computersystem get model
+) > "%DEBUG_PATH%" 2>&1
 exit /b 0
 
 :EnsureCsv
