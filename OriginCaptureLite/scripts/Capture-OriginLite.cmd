@@ -102,28 +102,35 @@ exit /b 0
 set "WMIC_ARGS=%~1"
 set "WMIC_KEY=%~2"
 set "WMIC_TARGET=%~3"
+set "WMIC_OUT=%SCRIPT_DIR%\logs\wmic_value.tmp"
 set "%WMIC_TARGET%="
-for /f "tokens=1,* delims==" %%A in ('wmic %WMIC_ARGS% 2^>nul') do (
+wmic %WMIC_ARGS% > "%WMIC_OUT%" 2>nul
+for /f "usebackq tokens=1,* delims==" %%A in ("%WMIC_OUT%") do (
     if /i "%%A"=="%WMIC_KEY%" (
         set "WMIC_VALUE=%%B"
-        for /f "tokens=* delims= " %%V in ("!WMIC_VALUE!") do set "WMIC_VALUE=%%V"
+        call :TrimValue WMIC_VALUE
         set "%WMIC_TARGET%=!WMIC_VALUE!"
     )
 )
+del "%WMIC_OUT%" >nul 2>nul
 exit /b 0
 
 :GetWmicTableValue
 set "WMIC_ARGS=%~1"
 set "WMIC_TARGET=%~2"
+set "WMIC_OUT=%SCRIPT_DIR%\logs\wmic_table.tmp"
 set "%WMIC_TARGET%="
-for /f "skip=1 tokens=* delims=" %%A in ('wmic %WMIC_ARGS% 2^>nul') do (
+wmic %WMIC_ARGS% > "%WMIC_OUT%" 2>nul
+for /f "usebackq tokens=* delims=" %%A in ("%WMIC_OUT%") do (
     set "WMIC_VALUE=%%A"
     call :TrimValue WMIC_VALUE
-    if defined WMIC_VALUE (
+    if defined WMIC_VALUE if /i not "!WMIC_VALUE!"=="SerialNumber" if /i not "!WMIC_VALUE!"=="IdentifyingNumber" if /i not "!WMIC_VALUE!"=="Manufacturer" if /i not "!WMIC_VALUE!"=="Model" (
         set "%WMIC_TARGET%=!WMIC_VALUE!"
+        del "%WMIC_OUT%" >nul 2>nul
         exit /b 0
     )
 )
+del "%WMIC_OUT%" >nul 2>nul
 exit /b 0
 
 :TrimValue
@@ -175,6 +182,7 @@ echo.
 echo CAPTURE FAILED
 echo %~1
 echo Exception log was saved if the USB was writable.
+echo WMIC debug saved to: %SCRIPT_DIR%\logs\wmic_debug.txt
 call :WaitForever
 exit /b 0
 
