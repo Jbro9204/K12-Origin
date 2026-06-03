@@ -59,8 +59,17 @@ function Ensure-Csv {
         New-Item -ItemType Directory -Path $directory -Force | Out-Null
     }
 
+    $requiredHeader = ($Columns -join ',')
+    if (Test-Path -LiteralPath $Path) {
+        $currentHeader = Get-Content -LiteralPath $Path -TotalCount 1 -ErrorAction SilentlyContinue
+        if ($currentHeader -ne $requiredHeader) {
+            $archivePath = "$Path.old-format-$(Get-Date -Format 'yyyyMMdd-HHmmss').csv"
+            Move-Item -LiteralPath $Path -Destination $archivePath -Force
+        }
+    }
+
     if (-not (Test-Path -LiteralPath $Path)) {
-        ($Columns -join ',') | Set-Content -LiteralPath $Path -Encoding ASCII
+        $requiredHeader | Set-Content -LiteralPath $Path -Encoding ASCII
     }
 }
 
