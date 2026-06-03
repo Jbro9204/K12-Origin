@@ -4,8 +4,10 @@ title Origin Capture Lite
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+
 set "CAPTURE_CSV=%SCRIPT_DIR%\surface_release_capture.csv"
 set "EXCEPTION_CSV=%SCRIPT_DIR%\logs\exceptions.csv"
+set "DEBUG_PATH=%SCRIPT_DIR%\logs\wmic_debug.txt"
 
 echo.
 echo ORIGIN CAPTURE LITE
@@ -13,26 +15,6 @@ echo Surface / Windows Device Release Capture
 echo No internal drive boot required
 echo No wipe, no bypass, capture only
 echo.
-
-where powershell.exe >nul 2>nul
-if errorlevel 1 (
-    call :RunBatchCapture
-    exit /b %ERRORLEVEL%
-)
-
-powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\Capture-OriginLite.ps1"
-set "EXIT_CODE=%ERRORLEVEL%"
-
-if not "%EXIT_CODE%"=="0" (
-    echo.
-    echo Capture script exited with code %EXIT_CODE%.
-    echo A command prompt will remain open for troubleshooting.
-    cmd /k
-)
-
-exit /b %EXIT_CODE%
-
-:RunBatchCapture
 echo Capturing device info...
 echo.
 
@@ -40,32 +22,32 @@ if not exist "%SCRIPT_DIR%\logs" mkdir "%SCRIPT_DIR%\logs" >nul 2>nul
 call :EnsureCsv "%CAPTURE_CSV%" "SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO"
 call :EnsureCsv "%EXCEPTION_CSV%" "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE"
 
-call :GetWmicValue "bios get serialnumber /value" "SerialNumber" SERIAL_NUMBER
-call :GetWmicValue "computersystem get manufacturer /value" "Manufacturer" MANUFACTURER
-call :GetWmicValue "computersystem get model /value" "Model" DEVICE_INFO
+call :WriteWmicDebug
 
-if not defined SERIAL_NUMBER call :GetWmicTableValue "bios get serialnumber" SERIAL_NUMBER
-if not defined SERIAL_NUMBER call :GetWmicValue "csproduct get identifyingnumber /value" "IdentifyingNumber" SERIAL_NUMBER
-if not defined SERIAL_NUMBER call :GetWmicTableValue "csproduct get identifyingnumber" SERIAL_NUMBER
-if not defined MANUFACTURER call :GetWmicTableValue "computersystem get manufacturer" MANUFACTURER
-if not defined DEVICE_INFO call :GetWmicTableValue "computersystem get model" DEVICE_INFO
+call :GetWmicListValue "bios get serialnumber /value" "SerialNumber" SERIAL_NUMBER
+if not defined SERIAL_NUMBER call :GetWmicTableValue "bios get serialnumber" "SerialNumber" SERIAL_NUMBER
+if not defined SERIAL_NUMBER call :GetWmicListValue "csproduct get identifyingnumber /value" "IdentifyingNumber" SERIAL_NUMBER
+if not defined SERIAL_NUMBER call :GetWmicTableValue "csproduct get identifyingnumber" "IdentifyingNumber" SERIAL_NUMBER
+
+call :GetWmicListValue "computersystem get manufacturer /value" "Manufacturer" MANUFACTURER
+if not defined MANUFACTURER call :GetWmicTableValue "computersystem get manufacturer" "Manufacturer" MANUFACTURER
+
+call :GetWmicListValue "computersystem get model /value" "Model" DEVICE_INFO
+if not defined DEVICE_INFO call :GetWmicTableValue "computersystem get model" "Model" DEVICE_INFO
 
 if not defined SERIAL_NUMBER (
-    call :WriteWmicDebug
     call :LogException "CAPTURE_VALIDATION_FAILED" "" "!MANUFACTURER!" "!DEVICE_INFO!" "Serial number is blank."
     call :ShowFailure "Serial number is blank."
     exit /b 1
 )
 
 if not defined MANUFACTURER (
-    call :WriteWmicDebug
     call :LogException "CAPTURE_VALIDATION_FAILED" "!SERIAL_NUMBER!" "" "!DEVICE_INFO!" "Manufacturer is blank."
     call :ShowFailure "Manufacturer is blank."
     exit /b 1
 )
 
 if not defined DEVICE_INFO (
-    call :WriteWmicDebug
     call :LogException "CAPTURE_VALIDATION_FAILED" "!SERIAL_NUMBER!" "!MANUFACTURER!" "" "Device info is blank."
     call :ShowFailure "Device info is blank."
     exit /b 1
@@ -78,7 +60,7 @@ if not errorlevel 1 (
     echo DUPLICATE SERIAL DETECTED
     echo Serial: !SERIAL_NUMBER!
     echo Duplicate attempt logged. No duplicate row was added.
-    call :WaitForever
+    call :HoldScreen
     exit /b 2
 )
 
@@ -95,51 +77,48 @@ echo Device Info: !DEVICE_INFO!
 echo Output CSV: %CAPTURE_CSV%
 echo.
 echo It is safe to power off this device or move to the next unit.
-call :WaitForever
+call :HoldScreen
 exit /b 0
 
-:GetWmicValue
+:GetWmicListValue
 set "WMIC_ARGS=%~1"
 set "WMIC_KEY=%~2"
 set "WMIC_TARGET=%~3"
-set "WMIC_OUT=%SCRIPT_DIR%\logs\wmic_value.tmp"
 set "%WMIC_TARGET%="
-wmic %WMIC_ARGS% > "%WMIC_OUT%" 2>nul
-for /f "usebackq tokens=1,* delims==" %%A in ("%WMIC_OUT%") do (
-    if /i "%%A"=="%WMIC_KEY%" (
-        set "WMIC_VALUE=%%B"
-        call :TrimValue WMIC_VALUE
-        set "%WMIC_TARGET%=!WMIC_VALUE!"
-    )
+for /f "tokens=1,* delims==" %%A in ('wmic %WMIC_ARGS% 2^>nul ^| findstr /i /b "%WMIC_KEY%="') do (
+    set "WMIC_VALUE=%%B"
+    call :CleanValue WMIC_VALUE
+    if defined WMIC_VALUE set "%WMIC_TARGET%=!WMIC_VALUE!"
 )
-del "%WMIC_OUT%" >nul 2>nul
 exit /b 0
 
 :GetWmicTableValue
 set "WMIC_ARGS=%~1"
-set "WMIC_TARGET=%~2"
-set "WMIC_OUT=%SCRIPT_DIR%\logs\wmic_table.tmp"
+set "WMIC_HEADER=%~2"
+set "WMIC_TARGET=%~3"
 set "%WMIC_TARGET%="
-wmic %WMIC_ARGS% > "%WMIC_OUT%" 2>nul
-for /f "usebackq tokens=* delims=" %%A in ("%WMIC_OUT%") do (
+for /f "tokens=* delims=" %%A in ('wmic %WMIC_ARGS% 2^>nul ^| findstr /r /v "^$" ^| findstr /v /i "%WMIC_HEADER%"') do (
     set "WMIC_VALUE=%%A"
-    call :TrimValue WMIC_VALUE
-    if defined WMIC_VALUE if /i not "!WMIC_VALUE!"=="SerialNumber" if /i not "!WMIC_VALUE!"=="IdentifyingNumber" if /i not "!WMIC_VALUE!"=="Manufacturer" if /i not "!WMIC_VALUE!"=="Model" (
+    call :CleanValue WMIC_VALUE
+    if defined WMIC_VALUE (
         set "%WMIC_TARGET%=!WMIC_VALUE!"
-        del "%WMIC_OUT%" >nul 2>nul
         exit /b 0
     )
 )
-del "%WMIC_OUT%" >nul 2>nul
 exit /b 0
 
-:TrimValue
-set "TRIM_NAME=%~1"
-for /f "tokens=* delims= " %%T in ("!%TRIM_NAME%!") do set "%TRIM_NAME%=%%T"
+:CleanValue
+set "CLEAN_NAME=%~1"
+for /f "tokens=* delims= " %%T in ("!%CLEAN_NAME%!") do set "%CLEAN_NAME%=%%T"
+:CleanTail
+if not defined %CLEAN_NAME% exit /b 0
+if "!%CLEAN_NAME%:~-1!"==" " (
+    set "%CLEAN_NAME%=!%CLEAN_NAME%:~0,-1!"
+    goto :CleanTail
+)
 exit /b 0
 
 :WriteWmicDebug
-set "DEBUG_PATH=%SCRIPT_DIR%\logs\wmic_debug.txt"
 (
     echo ORIGIN CAPTURE LITE WMIC DEBUG
     echo.
@@ -152,11 +131,20 @@ set "DEBUG_PATH=%SCRIPT_DIR%\logs\wmic_debug.txt"
     echo COMMAND: wmic csproduct get identifyingnumber
     wmic csproduct get identifyingnumber
     echo.
+    echo COMMAND: wmic csproduct get identifyingnumber /value
+    wmic csproduct get identifyingnumber /value
+    echo.
     echo COMMAND: wmic computersystem get manufacturer
     wmic computersystem get manufacturer
     echo.
+    echo COMMAND: wmic computersystem get manufacturer /value
+    wmic computersystem get manufacturer /value
+    echo.
     echo COMMAND: wmic computersystem get model
     wmic computersystem get model
+    echo.
+    echo COMMAND: wmic computersystem get model /value
+    wmic computersystem get model /value
 ) > "%DEBUG_PATH%" 2>&1
 exit /b 0
 
@@ -182,10 +170,10 @@ echo.
 echo CAPTURE FAILED
 echo %~1
 echo Exception log was saved if the USB was writable.
-echo WMIC debug saved to: %SCRIPT_DIR%\logs\wmic_debug.txt
-call :WaitForever
+echo WMIC debug saved to: %DEBUG_PATH%
+call :HoldScreen
 exit /b 0
 
-:WaitForever
+:HoldScreen
 cmd /k
 exit /b 0
