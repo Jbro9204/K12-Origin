@@ -29,6 +29,8 @@ No wipe, no bypass, capture only
 
 Auditors do not enter anything at the device. The output CSV contains only serial number, manufacturer, and device info.
 
+Each completed device is saved as its own row in `surface_release_capture.csv`.
+
 ## Successful Capture
 
 The screen shows:

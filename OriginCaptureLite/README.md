@@ -18,6 +18,8 @@ The output CSV includes only:
 SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO
 ```
 
+Each successful device capture appends one new row to `surface_release_capture.csv`.
+
 ## Project Layout
 
 ```text

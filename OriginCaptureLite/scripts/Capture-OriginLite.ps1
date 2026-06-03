@@ -77,7 +77,8 @@ function Add-CsvRow {
         }
     }
 
-    [pscustomobject]$ordered | Export-Csv -LiteralPath $Path -NoTypeInformation -Append -Encoding ASCII
+    $csvLines = [pscustomobject]$ordered | ConvertTo-Csv -NoTypeInformation
+    Add-Content -LiteralPath $Path -Value $csvLines[1] -Encoding ASCII
 }
 
 function Get-WmicValue {
