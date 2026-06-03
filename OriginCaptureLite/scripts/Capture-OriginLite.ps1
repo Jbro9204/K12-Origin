@@ -12,12 +12,18 @@ function Get-DefaultConfig {
         schoolFacingCsv = 'surface_release_capture.csv'
         auditLogCsv = 'origin_capture_audit_log.csv'
         exceptionsCsv = 'logs\exceptions.csv'
-        requireOperatorId = $true
-        requirePoNumber = $true
-        requireLotNumber = $true
-        requirePalletId = $true
+        unattendedMode = $true
+        defaultPoNumber = 'UNASSIGNED'
+        defaultLotNumber = 'UNASSIGNED'
+        defaultPalletId = 'UNASSIGNED'
+        defaultStationId = 'AUTO-STATION'
+        defaultOperatorId = 'AUTO-CAPTURE'
+        requireOperatorId = $false
+        requirePoNumber = $false
+        requireLotNumber = $false
+        requirePalletId = $false
         enableDuplicateDetection = $true
-        defaultPostCaptureAction = 'shutdown'
+        defaultPostCaptureAction = 'wait'
     }
 }
 
@@ -177,6 +183,39 @@ function Read-RequiredValue {
     } while ($true)
 }
 
+function Get-ConfigValue {
+    param([object]$Config, [string]$PropertyName, [string]$Fallback)
+
+    $property = $Config.PSObject.Properties[$PropertyName]
+    if ($property -and -not [string]::IsNullOrWhiteSpace([string]$property.Value)) {
+        return ([string]$property.Value).Trim()
+    }
+
+    return $Fallback
+}
+
+function New-OriginSession {
+    param([object]$Config)
+
+    if ([bool]$Config.unattendedMode) {
+        return @{
+            PO_NUMBER = Get-ConfigValue -Config $Config -PropertyName 'defaultPoNumber' -Fallback 'UNASSIGNED'
+            LOT_NUMBER = Get-ConfigValue -Config $Config -PropertyName 'defaultLotNumber' -Fallback 'UNASSIGNED'
+            PALLET_ID = Get-ConfigValue -Config $Config -PropertyName 'defaultPalletId' -Fallback 'UNASSIGNED'
+            STATION_ID = Get-ConfigValue -Config $Config -PropertyName 'defaultStationId' -Fallback 'AUTO-STATION'
+            OPERATOR_ID = Get-ConfigValue -Config $Config -PropertyName 'defaultOperatorId' -Fallback 'AUTO-CAPTURE'
+        }
+    }
+
+    return @{
+        PO_NUMBER = Read-RequiredValue -Label 'PO Number' -Required ([bool]$Config.requirePoNumber)
+        LOT_NUMBER = Read-RequiredValue -Label 'Lot Number' -Required ([bool]$Config.requireLotNumber)
+        PALLET_ID = Read-RequiredValue -Label 'Pallet ID' -Required ([bool]$Config.requirePalletId)
+        STATION_ID = Read-RequiredValue -Label 'Station ID' -Required $true
+        OPERATOR_ID = Read-RequiredValue -Label 'Operator ID' -Required ([bool]$Config.requireOperatorId)
+    }
+}
+
 function Write-Banner {
     Clear-Host
     Write-Host ''
@@ -256,6 +295,33 @@ function Invoke-PostCaptureMenu {
     }
 }
 
+function Invoke-FinalAction {
+    param([string]$Action, [string]$Message)
+
+    $normalized = ([string]$Action).Trim().ToLowerInvariant()
+    switch ($normalized) {
+        'shutdown' {
+            Write-Host ''
+            Write-Host $Message
+            Start-Sleep -Seconds 5
+            try { wpeutil shutdown } catch { shutdown.exe /s /t 0 }
+            return
+        }
+        'exit' {
+            Write-Host ''
+            Write-Host $Message
+            Start-Sleep -Seconds 5
+            return
+        }
+        default {
+            Write-Host ''
+            Write-Host $Message
+            Write-Host 'It is safe to power off this device or move to the next unit.' -ForegroundColor Cyan
+            while ($true) { Start-Sleep -Seconds 3600 }
+        }
+    }
+}
+
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Config = Read-OriginConfig -Root $Root
 $SchoolCsv = Resolve-OriginPath -Root $Root -Path $Config.schoolFacingCsv
@@ -267,13 +333,7 @@ Ensure-Csv -Path $AuditCsv -Columns $AuditColumns
 Ensure-Csv -Path $ExceptionsCsv -Columns $ExceptionColumns
 
 Write-Banner
-$Session = @{
-    PO_NUMBER = Read-RequiredValue -Label 'PO Number' -Required ([bool]$Config.requirePoNumber)
-    LOT_NUMBER = Read-RequiredValue -Label 'Lot Number' -Required ([bool]$Config.requireLotNumber)
-    PALLET_ID = Read-RequiredValue -Label 'Pallet ID' -Required ([bool]$Config.requirePalletId)
-    STATION_ID = Read-RequiredValue -Label 'Station ID' -Required $true
-    OPERATOR_ID = Read-RequiredValue -Label 'Operator ID' -Required ([bool]$Config.requireOperatorId)
-}
+$Session = New-OriginSession -Config $Config
 
 do {
     Write-Banner
@@ -293,6 +353,10 @@ do {
             Write-Host ''
             Write-Host 'CAPTURE FAILED' -ForegroundColor Red
             Write-Host $message
+            if ([bool]$Config.unattendedMode) {
+                Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Capture failed. Exception log was saved if the USB was writable.'
+                exit 1
+            }
             $action = Invoke-PostCaptureMenu -DefaultAction $Config.defaultPostCaptureAction
             continue
         }
@@ -302,6 +366,10 @@ do {
             Write-Host ''
             Write-Host 'DUPLICATE SERIAL DETECTED' -ForegroundColor Yellow
             Write-Host "Serial: $($device.SerialNumber)"
+            if ([bool]$Config.unattendedMode) {
+                Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Duplicate attempt logged. No duplicate row was added.'
+                exit 2
+            }
             $confirm = Read-Host 'Append duplicate row anyway? Type YES to confirm'
             if ($confirm -ne 'YES') {
                 $action = Invoke-PostCaptureMenu -DefaultAction $Config.defaultPostCaptureAction
@@ -356,12 +424,20 @@ do {
         Write-Host "Model: $($device.Model)"
         Write-Host "Release CSV: $SchoolCsv"
         Write-Host "Audit Log: $AuditCsv"
+        if ([bool]$Config.unattendedMode) {
+            Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Capture complete. Logs are saved on the USB.'
+            exit 0
+        }
     } catch {
         $message = $_.Exception.Message
         Write-OriginException -Path $ExceptionsCsv -Session $Session -ErrorType 'UNEXPECTED_FAILURE' -Device $device -Message $message
         Write-Host ''
         Write-Host 'CAPTURE FAILED' -ForegroundColor Red
         Write-Host $message
+        if ([bool]$Config.unattendedMode) {
+            Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Capture failed. Exception log was saved if the USB was writable.'
+            exit 1
+        }
     }
 
     $action = Invoke-PostCaptureMenu -DefaultAction $Config.defaultPostCaptureAction

@@ -8,12 +8,11 @@
 4. Press and release Power.
 5. Keep holding Volume Down until the Surface logo or spinning dots appear.
 6. Wait for Origin Capture Lite to launch.
-7. Enter PO number, lot number, pallet ID, station ID, and operator ID.
+7. Do not type anything.
 8. Wait for capture to complete.
 9. Confirm the screen shows `ORIGIN INFO GATHERED`.
-10. Let the device shut down.
-11. Move the device to Captured - Pending MDM Release.
-12. Repeat with the next device.
+10. Move the device to Captured - Pending MDM Release.
+11. Repeat with the next device.
 
 ## Capture Screen
 
@@ -26,15 +25,19 @@ No internal drive boot required
 No wipe, no bypass, capture only
 ```
 
-## Required Session Values
+## Session Values
 
-- PO Number
-- Lot Number
-- Pallet ID
-- Station ID
-- Operator ID
+Auditors do not enter session values at the device. The CSV fields for PO number, lot number, pallet ID, station ID, and operator ID are filled from `origin_config.json`.
 
-These values are reused for every capture during the same boot session.
+Default unattended values are:
+
+```text
+PO_NUMBER=UNASSIGNED
+LOT_NUMBER=UNASSIGNED
+PALLET_ID=UNASSIGNED
+STATION_ID=AUTO-STATION
+OPERATOR_ID=AUTO-CAPTURE
+```
 
 ## Successful Capture
 
@@ -48,7 +51,7 @@ Manufacturer: [MANUFACTURER]
 Model: [MODEL]
 ```
 
-The default action is shutdown.
+The default action is to leave the success message on screen so the auditor can confirm the log was saved.
 
 ## Duplicate Serial
 

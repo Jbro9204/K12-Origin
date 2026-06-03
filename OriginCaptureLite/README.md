@@ -71,10 +71,11 @@ The CSV files are created automatically if they do not exist.
 2. Copy the Origin Capture Lite runtime files into `OriginCapture` on the USB.
 3. Configure WinPE `Startnet.cmd` to locate and launch `OriginCapture\Capture-OriginLite.cmd`.
 4. Boot the target Surface Go 2 from USB.
-5. Enter PO, lot, pallet, station, and operator values.
-6. Capture serial number, manufacturer, and model.
-7. Confirm the screen shows `ORIGIN INFO GATHERED`.
-8. Send `surface_release_capture.csv` to the school/client for release processing.
+5. Origin Capture Lite automatically captures serial number, manufacturer, and model.
+6. Confirm the screen shows `ORIGIN INFO GATHERED`.
+7. Send `surface_release_capture.csv` to the school/client for release processing.
+
+By default, the tool runs in unattended mode. Auditors do not type PO, lot, pallet, station, or operator values at the device. Those CSV fields are filled from `origin_config.json`.
 
 ## Data Capture
 

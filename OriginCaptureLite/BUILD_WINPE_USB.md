@@ -103,7 +103,7 @@ This does two things:
 4. Press and release Power.
 5. Keep holding Volume Down until the Surface logo or spinning dots appear.
 6. Confirm Origin Capture Lite launches automatically.
-7. Enter test PO, lot, pallet, station, and operator values.
+7. Confirm no typing is required after the tool launches.
 8. Confirm serial number, manufacturer, and model are captured.
 9. Confirm the screen shows `ORIGIN INFO GATHERED`.
 10. Confirm CSV files are written under `OriginCapture` on the USB.

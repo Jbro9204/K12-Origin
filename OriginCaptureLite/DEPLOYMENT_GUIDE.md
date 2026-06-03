@@ -35,8 +35,7 @@ Each station should have:
 ## Production Controls
 
 - Use a unique `STATION_ID` per workstation.
-- Use a unique `OPERATOR_ID` per staff member.
-- Use PO, lot, and pallet values from the production receiving system.
+- For unattended capture, set `defaultStationId`, `defaultOperatorId`, `defaultPoNumber`, `defaultLotNumber`, and `defaultPalletId` in `origin_config.json` before making each USB.
 - Review `logs\exceptions.csv` daily.
 - Preserve `origin_capture_audit_log.csv` for internal traceability.
 - Send only `surface_release_capture.csv` to the school/client unless otherwise requested.
@@ -56,4 +55,3 @@ The script version is stored in `origin_config.json` and written into `origin_ca
 3. Replace `origin_config.json` if configuration changed.
 4. Keep existing CSV files only when intentionally continuing the same production batch.
 5. Run `Validate-Capture.ps1` from the USB runtime folder when PowerShell is available.
-
