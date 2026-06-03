@@ -76,7 +76,14 @@ function Add-WinPeOptionalComponent {
 }
 
 if (Test-Path -LiteralPath $mountRoot) {
-    throw "Mount folder already exists: $mountRoot. Remove it only after confirming no DISM mount is active."
+    $mountInfo = & dism.exe /Get-MountedWimInfo
+    $mountText = ($mountInfo -join "`n")
+    if ($mountText -match [regex]::Escape($mountRoot)) {
+        throw "DISM still has an image mounted at $mountRoot. Run: dism /Unmount-Image /MountDir:`"$mountRoot`" /Discard"
+    }
+
+    Write-Host "Removing stale mount folder: $mountRoot"
+    Remove-Item -LiteralPath $mountRoot -Recurse -Force
 }
 
 New-Item -ItemType Directory -Force -Path $mountRoot | Out-Null
