@@ -22,6 +22,13 @@ if not exist "%SCRIPT_DIR%\logs" mkdir "%SCRIPT_DIR%\logs" >nul 2>nul
 call :EnsureCsv "%CAPTURE_CSV%" "SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO"
 call :EnsureCsv "%EXCEPTION_CSV%" "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE"
 
+if exist "%SystemRoot%\System32\cscript.exe" if exist "%SCRIPT_DIR%\Capture-OriginLite.vbs" (
+    cscript.exe //nologo "%SCRIPT_DIR%\Capture-OriginLite.vbs"
+    set "VBS_EXIT=%ERRORLEVEL%"
+    call :HoldScreen
+    exit /b !VBS_EXIT!
+)
+
 call :WriteWmicDebug
 
 call :GetWmicListValue "bios get serialnumber /value" "SerialNumber" SERIAL_NUMBER

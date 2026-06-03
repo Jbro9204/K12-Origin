@@ -37,7 +37,11 @@ wmic bios get serialnumber
 
 ## PowerShell Not Available
 
-Origin Capture Lite automatically falls back to native CMD plus WMIC capture when PowerShell is missing from WinPE. The USB does not need to be rebuilt only to add PowerShell.
+Origin Capture Lite does not require PowerShell. It uses Windows Script Host plus WMI after `WinPE-WMI` and `WinPE-Scripting` are added to the boot image.
+
+## WMIC Not Available
+
+Origin Capture Lite does not require WMIC. If WMIC is missing, the launcher uses `Capture-OriginLite.vbs` through `cscript.exe`. If `cscript.exe` is also missing, rerun `Install-WinPE-Autostart.ps1` so it can add `WinPE-WMI` and `WinPE-Scripting` to `boot.wim`.
 
 ## Duplicate Serial Detected
 

@@ -92,7 +92,9 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 This does two things:
 
 1. Copies the runtime files into `E:\OriginCapture`.
-2. Mounts `E:\sources\boot.wim`, installs `Startnet.cmd`, and commits the image so Origin Capture Lite launches automatically when WinPE boots.
+2. Mounts `E:\sources\boot.wim`, adds `WinPE-WMI` and `WinPE-Scripting`, installs `Startnet.cmd`, and commits the image so Origin Capture Lite launches automatically when WinPE boots.
+
+`WinPE-WMI` and `WinPE-Scripting` are required because the capture runtime uses Windows Script Host plus WMI to pull serial number, manufacturer, and device info. A default WinPE image may not include PowerShell or WMIC.
 
 ## 9. Test On Surface Go 2
 
