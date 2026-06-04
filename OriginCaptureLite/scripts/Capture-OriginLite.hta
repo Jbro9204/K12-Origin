@@ -193,8 +193,9 @@ button {
 <script language="VBScript">
 Option Explicit
 
-Dim fso, root, captureCsv, exceptionCsv
+Dim fso, root, captureCsv, exceptionCsv, captureStarted
 Set fso = CreateObject("Scripting.FileSystemObject")
+captureStarted = False
 root = fso.GetParentFolderName(Unescape(Window.location.pathname))
 If Left(root, 1) = "/" Then root = Mid(root, 2)
 root = Replace(root, "/", "\")
@@ -202,10 +203,12 @@ captureCsv = fso.BuildPath(root, "surface_release_capture.csv")
 exceptionCsv = fso.BuildPath(fso.BuildPath(root, "logs"), "exceptions.csv")
 
 Sub Window_OnLoad
-  window.setTimeout "StartCapture", 650
+  StartCapture
 End Sub
 
 Sub StartCapture
+  If captureStarted Then Exit Sub
+  captureStarted = True
   SetState "capturing", "CAPTURING", "Capturing device information...", "Reading Serial Number, Manufacturer, Model, and CSV Output."
   Document.getElementById("actions").Style.Display = "none"
   CaptureDevice
@@ -364,6 +367,8 @@ Function TimestampForFile()
   d = Now
   TimestampForFile = Year(d) & Right("0" & Month(d), 2) & Right("0" & Day(d), 2) & "-" & Right("0" & Hour(d), 2) & Right("0" & Minute(d), 2) & Right("0" & Second(d), 2)
 End Function
+
+StartCapture
 </script>
 </body>
 </html>
