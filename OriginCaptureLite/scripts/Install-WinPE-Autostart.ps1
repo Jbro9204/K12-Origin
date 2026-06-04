@@ -33,9 +33,12 @@ if (-not (Test-Path -LiteralPath $bootWim)) {
 
 Write-Host "Preparing runtime folder at $runtimeRoot"
 New-Item -ItemType Directory -Force -Path (Join-Path $runtimeRoot 'logs') | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $runtimeRoot 'assets') | Out-Null
 Copy-Item -LiteralPath (Join-Path $scriptRoot 'Capture-OriginLite.cmd') -Destination (Join-Path $runtimeRoot 'Capture-OriginLite.cmd') -Force
 Copy-Item -LiteralPath (Join-Path $scriptRoot 'Capture-OriginLite.ps1') -Destination (Join-Path $runtimeRoot 'Capture-OriginLite.ps1') -Force
 Copy-Item -LiteralPath (Join-Path $scriptRoot 'Capture-OriginLite.vbs') -Destination (Join-Path $runtimeRoot 'Capture-OriginLite.vbs') -Force
+Copy-Item -LiteralPath (Join-Path $scriptRoot 'Capture-OriginLite.hta') -Destination (Join-Path $runtimeRoot 'Capture-OriginLite.hta') -Force
+Copy-Item -LiteralPath (Join-Path $scriptRoot 'assets\New Origin Trans.png') -Destination (Join-Path $runtimeRoot 'assets\New Origin Trans.png') -Force
 Copy-Item -LiteralPath (Join-Path $projectRoot 'config\origin_config.json') -Destination (Join-Path $runtimeRoot 'origin_config.json') -Force
 
 function Get-WinPeOcRoot {
@@ -75,6 +78,22 @@ function Add-WinPeOptionalComponent {
     }
 }
 
+function Add-WinPeOptionalComponentIfAvailable {
+    param(
+        [string]$MountRoot,
+        [string]$OcRoot,
+        [string]$PackageName
+    )
+
+    $packagePath = Join-Path $OcRoot "$PackageName.cab"
+    if (-not (Test-Path -LiteralPath $packagePath)) {
+        Write-Warning "Optional visual component was not found: $packagePath"
+        return
+    }
+
+    Add-WinPeOptionalComponent -MountRoot $MountRoot -OcRoot $OcRoot -PackageName $PackageName
+}
+
 if (Test-Path -LiteralPath $mountRoot) {
     $mountInfo = & dism.exe /Get-MountedWimInfo
     $mountText = ($mountInfo -join "`n")
@@ -99,6 +118,7 @@ try {
 
     Add-WinPeOptionalComponent -MountRoot $mountRoot -OcRoot $ocRoot -PackageName 'WinPE-WMI'
     Add-WinPeOptionalComponent -MountRoot $mountRoot -OcRoot $ocRoot -PackageName 'WinPE-Scripting'
+    Add-WinPeOptionalComponentIfAvailable -MountRoot $mountRoot -OcRoot $ocRoot -PackageName 'WinPE-HTA'
 
     $targetStartnet = Join-Path $mountRoot 'Windows\System32\Startnet.cmd'
     Write-Host "Installing auto-launch Startnet.cmd"

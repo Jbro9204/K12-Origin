@@ -15,8 +15,12 @@ The USB must contain:
 ```text
 OriginCapture/
   Capture-OriginLite.cmd
+  Capture-OriginLite.hta
   Capture-OriginLite.ps1
+  Capture-OriginLite.vbs
   origin_config.json
+  assets/
+    New Origin Trans.png
   logs/
 ```
 
@@ -48,7 +52,8 @@ The script version is stored in `origin_config.json`.
 ## Updating USBs
 
 1. Replace `Capture-OriginLite.cmd`.
-2. Replace `Capture-OriginLite.ps1`.
-3. Replace `origin_config.json` if configuration changed.
-4. Keep existing CSV files only when intentionally continuing the same production batch.
-5. Run `Validate-Capture.ps1` from the USB runtime folder when PowerShell is available.
+2. Replace `Capture-OriginLite.hta`, `Capture-OriginLite.ps1`, and `Capture-OriginLite.vbs`.
+3. Replace `assets\New Origin Trans.png` if branding changed.
+4. Replace `origin_config.json` if configuration changed.
+5. Keep existing CSV files only when intentionally continuing the same production batch.
+6. Run `Validate-Capture.ps1` from the USB runtime folder when PowerShell is available.

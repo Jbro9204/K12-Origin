@@ -16,14 +16,16 @@
 
 ## Capture Screen
 
-The tool displays:
+The tool displays a branded Origin Capture Lite screen with the current runtime state:
 
 ```text
 ORIGIN CAPTURE LITE
-Surface / Windows Device Release Capture
-No internal drive boot required
-No wipe, no bypass, capture only
+Device Identity & Serialization Capture
+
+STATE: CAPTURING
 ```
+
+When the branded HTA interface is available, the Origin logo appears on the capture screen. If WinPE does not include HTA support, the tool automatically uses the polished console screen.
 
 ## Captured Fields
 
@@ -36,11 +38,12 @@ Each completed device is saved as its own row in `surface_release_capture.csv`.
 The screen shows:
 
 ```text
+STATE: SUCCESS
 ORIGIN INFO GATHERED
-Capture log saved.
 Serial: [SERIAL_NUMBER]
 Manufacturer: [MANUFACTURER]
 Device Info: [DEVICE_INFO]
+Output CSV: [CSV_PATH]
 ```
 
 The default action is to leave the success message on screen so the auditor can confirm the CSV was saved.

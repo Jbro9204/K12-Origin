@@ -1,6 +1,8 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 title Origin Capture Lite
+color 0B
+mode con: cols=100 lines=32 >nul 2>nul
 
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
@@ -9,18 +11,16 @@ set "CAPTURE_CSV=%SCRIPT_DIR%\surface_release_capture.csv"
 set "EXCEPTION_CSV=%SCRIPT_DIR%\logs\exceptions.csv"
 set "DEBUG_PATH=%SCRIPT_DIR%\logs\wmic_debug.txt"
 
-echo.
-echo ORIGIN CAPTURE LITE
-echo Surface / Windows Device Release Capture
-echo No internal drive boot required
-echo No wipe, no bypass, capture only
-echo.
-echo Capturing device info...
-echo.
+call :ShowHeader "READY" "Ready to capture device identity."
 
 if not exist "%SCRIPT_DIR%\logs" mkdir "%SCRIPT_DIR%\logs" >nul 2>nul
 call :EnsureCsv "%CAPTURE_CSV%" "SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO"
 call :EnsureCsv "%EXCEPTION_CSV%" "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE"
+
+if exist "%SystemRoot%\System32\mshta.exe" if exist "%SCRIPT_DIR%\Capture-OriginLite.hta" (
+    "%SystemRoot%\System32\mshta.exe" "%SCRIPT_DIR%\Capture-OriginLite.hta"
+    exit /b !ERRORLEVEL!
+)
 
 if exist "%SystemRoot%\System32\cscript.exe" if exist "%SCRIPT_DIR%\Capture-OriginLite.vbs" (
     cscript.exe //nologo "%SCRIPT_DIR%\Capture-OriginLite.vbs"
@@ -29,6 +29,7 @@ if exist "%SystemRoot%\System32\cscript.exe" if exist "%SCRIPT_DIR%\Capture-Orig
     exit /b !VBS_EXIT!
 )
 
+call :ShowHeader "CAPTURING" "Capturing device information..."
 call :WriteWmicDebug
 
 call :GetWmicListValue "bios get serialnumber /value" "SerialNumber" SERIAL_NUMBER
@@ -63,26 +64,22 @@ if not defined DEVICE_INFO (
 findstr /i /c:"!SERIAL_NUMBER!" "%CAPTURE_CSV%" >nul 2>nul
 if not errorlevel 1 (
     call :LogException "DUPLICATE_SERIAL" "!SERIAL_NUMBER!" "!MANUFACTURER!" "!DEVICE_INFO!" "Duplicate serial detected before append."
+    color 0E
+    call :ShowHeader "DUPLICATE SERIAL" "This serial number already exists in the current capture output."
+    call :ShowData "!SERIAL_NUMBER!" "!MANUFACTURER!" "!DEVICE_INFO!" "%CAPTURE_CSV%"
     echo.
-    echo DUPLICATE SERIAL DETECTED
-    echo Serial: !SERIAL_NUMBER!
-    echo Duplicate attempt logged. No duplicate row was added.
+    echo Review before proceeding. No duplicate row was added.
     call :HoldScreen
     exit /b 2
 )
 
 >> "%CAPTURE_CSV%" echo "!SERIAL_NUMBER!","!MANUFACTURER!","!DEVICE_INFO!"
 
+color 0A
+call :ShowHeader "SUCCESS" "ORIGIN INFO GATHERED"
+echo Device identity captured and saved successfully.
 echo.
-echo ========================================
-echo ORIGIN INFO GATHERED
-echo Capture CSV saved.
-echo ========================================
-echo Serial: !SERIAL_NUMBER!
-echo Manufacturer: !MANUFACTURER!
-echo Device Info: !DEVICE_INFO!
-echo Output CSV: %CAPTURE_CSV%
-echo.
+call :ShowData "!SERIAL_NUMBER!" "!MANUFACTURER!" "!DEVICE_INFO!" "%CAPTURE_CSV%"
 echo It is safe to power off this device or move to the next unit.
 call :HoldScreen
 exit /b 0
@@ -173,12 +170,41 @@ call :EnsureCsv "%EXCEPTION_CSV%" "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_
 exit /b 0
 
 :ShowFailure
-echo.
-echo CAPTURE FAILED
+color 0C
+call :ShowHeader "FAILED CAPTURE" "CAPTURE FAILED"
 echo %~1
 echo Exception log was saved if the USB was writable.
 echo WMIC debug saved to: %DEBUG_PATH%
 call :HoldScreen
+exit /b 0
+
+:ShowHeader
+cls
+echo.
+echo  ================================================================================================
+echo   ORIGIN CAPTURE LITE
+echo   Device Identity ^& Serialization Capture
+echo  ================================================================================================
+echo.
+echo   STATE: %~1
+echo.
+echo   %~2
+echo.
+echo  ------------------------------------------------------------------------------------------------
+echo.
+echo   Designed and developed by Jordan Brown ^| LDG Systems
+echo.
+exit /b 0
+
+:ShowData
+echo   Serial Number : %~1
+echo   Manufacturer  : %~2
+echo   Model         : %~3
+echo   CSV Path      : %~4
+echo   Timestamp     : %DATE% %TIME%
+echo.
+echo  ------------------------------------------------------------------------------------------------
+echo.
 exit /b 0
 
 :HoldScreen

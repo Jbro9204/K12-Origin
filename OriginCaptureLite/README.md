@@ -31,10 +31,14 @@ OPERATOR_GUIDE.md
 TROUBLESHOOTING.md
 scripts/
   Capture-OriginLite.cmd
+  Capture-OriginLite.hta
   Capture-OriginLite.ps1
+  Capture-OriginLite.vbs
   Startnet.cmd
   Validate-Capture.ps1
   Export-Summary.ps1
+  assets/
+    New Origin Trans.png
 config/
   origin_config.json
 output/
@@ -51,8 +55,12 @@ Copy the runtime files to a USB folder named `OriginCapture`:
 USB_ROOT/
   OriginCapture/
   Capture-OriginLite.cmd
+  Capture-OriginLite.hta
   Capture-OriginLite.ps1
+  Capture-OriginLite.vbs
   origin_config.json
+  assets/
+    New Origin Trans.png
   surface_release_capture.csv
   logs/
     exceptions.csv
@@ -81,4 +89,4 @@ wmic bios get serialnumber
 wmic computersystem get manufacturer,model
 ```
 
-If PowerShell is available, the launcher uses the PowerShell capture script. If PowerShell is not available, the launcher automatically falls back to native CMD plus WMIC capture. No internet access, database, Python, Node, npm, or external package is required. The model is saved as `DEVICE_INFO`.
+The launcher prefers the branded HTA interface when WinPE includes HTA support, then falls back to the Windows Script Host console interface, then to native CMD plus WMIC capture. No internet access, database, Python, Node, npm, or external package is required. The model is saved as `DEVICE_INFO`.

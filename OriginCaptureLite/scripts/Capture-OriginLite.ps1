@@ -164,13 +164,41 @@ function Get-DeviceIdentity {
 }
 
 function Write-Banner {
+    param(
+        [string]$State = 'READY',
+        [string]$Message = 'Ready to capture device identity.'
+    )
+
     Clear-Host
     Write-Host ''
-    Write-Host 'ORIGIN CAPTURE LITE' -ForegroundColor Cyan
-    Write-Host 'Surface / Windows Device Release Capture'
-    Write-Host 'No internal drive boot required'
-    Write-Host 'No wipe, no bypass, capture only'
+    Write-Host '====================================================================================================' -ForegroundColor DarkCyan
+    Write-Host ' ORIGIN CAPTURE LITE' -ForegroundColor Cyan
+    Write-Host ' Device Identity & Serialization Capture' -ForegroundColor Gray
+    Write-Host '====================================================================================================' -ForegroundColor DarkCyan
     Write-Host ''
+    Write-Host " STATE: $State" -ForegroundColor Cyan
+    Write-Host ''
+    Write-Host " $Message" -ForegroundColor White
+    Write-Host ''
+    Write-Host '----------------------------------------------------------------------------------------------------' -ForegroundColor DarkGray
+    Write-Host ''
+    Write-Host ' Designed and developed by Jordan Brown | LDG Systems' -ForegroundColor DarkGray
+    Write-Host ''
+}
+
+function Write-OriginData {
+    param(
+        [object]$Device,
+        [string]$CsvPath
+    )
+
+    Write-Host " Serial Number : $($Device.SerialNumber)"
+    Write-Host " Manufacturer  : $($Device.Manufacturer)"
+    Write-Host " Model         : $($Device.Model)"
+    Write-Host " CSV Path      : $CsvPath"
+    Write-Host " Timestamp     : $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Write-Host ''
+    Write-Host '----------------------------------------------------------------------------------------------------' -ForegroundColor DarkGray
 }
 
 function Write-OriginException {
@@ -246,10 +274,9 @@ $ExceptionsCsv = Resolve-OriginPath -Root $Root -Path $Config.exceptionsCsv
 Ensure-Csv -Path $SchoolCsv -Columns $CaptureColumns
 Ensure-Csv -Path $ExceptionsCsv -Columns $ExceptionColumns
 
-Write-Banner
+Write-Banner -State 'READY' -Message 'Origin Capture Lite is ready. Capture will begin automatically.'
 if ($true) {
-    Write-Banner
-    Write-Host 'Capturing hardware identity...'
+    Write-Banner -State 'CAPTURING' -Message 'Capturing device information...'
     $device = $null
 
     try {
@@ -262,18 +289,18 @@ if ($true) {
         if ($errors.Count -gt 0) {
             $message = ($errors -join ' ')
             Write-OriginException -Path $ExceptionsCsv -ErrorType 'CAPTURE_VALIDATION_FAILED' -Device $device -Message $message
-            Write-Host ''
-            Write-Host 'CAPTURE FAILED' -ForegroundColor Red
-            Write-Host $message
+            Write-Banner -State 'REVIEW REQUIRED' -Message 'Capture completed with missing or incomplete fields.'
+            Write-OriginData -Device $device -CsvPath $SchoolCsv
+            Write-Host $message -ForegroundColor Yellow
             Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Capture failed. Exception log was saved if the USB was writable.'
             exit 1
         }
 
         if ([bool]$Config.enableDuplicateDetection -and (Test-DuplicateSerial -CsvPath $SchoolCsv -SerialNumber $device.SerialNumber)) {
             Write-OriginException -Path $ExceptionsCsv -ErrorType 'DUPLICATE_SERIAL' -Device $device -Message 'Duplicate serial detected before append.'
-            Write-Host ''
-            Write-Host 'DUPLICATE SERIAL DETECTED' -ForegroundColor Yellow
-            Write-Host "Serial: $($device.SerialNumber)"
+            Write-Banner -State 'DUPLICATE SERIAL' -Message 'DUPLICATE SERIAL DETECTED'
+            Write-OriginData -Device $device -CsvPath $SchoolCsv
+            Write-Host 'This serial number already exists in the current capture output. Review before proceeding.' -ForegroundColor Yellow
             Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Duplicate attempt logged. No duplicate row was added.'
             exit 2
         }
@@ -284,23 +311,18 @@ if ($true) {
             DEVICE_INFO = $device.Model
         }
 
+        Write-Banner -State 'SUCCESS' -Message 'ORIGIN INFO GATHERED'
+        Write-Host 'Device identity captured and saved successfully.' -ForegroundColor Green
         Write-Host ''
-        Write-Host '========================================' -ForegroundColor Green
-        Write-Host 'ORIGIN INFO GATHERED' -ForegroundColor Green
-        Write-Host 'Capture log saved.' -ForegroundColor Green
-        Write-Host '========================================' -ForegroundColor Green
-        Write-Host "Serial: $($device.SerialNumber)"
-        Write-Host "Manufacturer: $($device.Manufacturer)"
-        Write-Host "Device Info: $($device.Model)"
-        Write-Host "Output CSV: $SchoolCsv"
+        Write-OriginData -Device $device -CsvPath $SchoolCsv
         Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Capture complete. Log is saved on the USB.'
         exit 0
     } catch {
         $message = $_.Exception.Message
         Write-OriginException -Path $ExceptionsCsv -ErrorType 'UNEXPECTED_FAILURE' -Device $device -Message $message
-        Write-Host ''
-        Write-Host 'CAPTURE FAILED' -ForegroundColor Red
-        Write-Host $message
+        Write-Banner -State 'FAILED CAPTURE' -Message 'CAPTURE FAILED'
+        Write-Host 'Origin could not collect the required device information. Review this device before continuing.' -ForegroundColor Red
+        Write-Host $message -ForegroundColor DarkGray
         Invoke-FinalAction -Action $Config.defaultPostCaptureAction -Message 'Capture failed. Exception log was saved if the USB was writable.'
         exit 1
     }

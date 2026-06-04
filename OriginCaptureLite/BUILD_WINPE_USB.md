@@ -65,13 +65,17 @@ Create the runtime folder:
 ```cmd
 mkdir E:\OriginCapture
 mkdir E:\OriginCapture\logs
+mkdir E:\OriginCapture\assets
 ```
 
 Copy runtime files:
 
 ```cmd
 copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\scripts\Capture-OriginLite.cmd" "E:\OriginCapture\Capture-OriginLite.cmd"
+copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\scripts\Capture-OriginLite.hta" "E:\OriginCapture\Capture-OriginLite.hta"
 copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\scripts\Capture-OriginLite.ps1" "E:\OriginCapture\Capture-OriginLite.ps1"
+copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\scripts\Capture-OriginLite.vbs" "E:\OriginCapture\Capture-OriginLite.vbs"
+copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\scripts\assets\New Origin Trans.png" "E:\OriginCapture\assets\New Origin Trans.png"
 copy /Y "C:\Path\To\K12-Origin\OriginCaptureLite\config\origin_config.json" "E:\OriginCapture\origin_config.json"
 ```
 
@@ -92,9 +96,11 @@ Set-ExecutionPolicy -Scope Process Bypass -Force
 This does two things:
 
 1. Copies the runtime files into `E:\OriginCapture`.
-2. Mounts `E:\sources\boot.wim`, adds `WinPE-WMI` and `WinPE-Scripting`, installs `Startnet.cmd`, and commits the image so Origin Capture Lite launches automatically when WinPE boots.
+2. Mounts `E:\sources\boot.wim`, adds `WinPE-WMI`, `WinPE-Scripting`, and `WinPE-HTA` when available, installs `Startnet.cmd`, and commits the image so Origin Capture Lite launches automatically when WinPE boots.
 
 `WinPE-WMI` and `WinPE-Scripting` are required because the capture runtime uses Windows Script Host plus WMI to pull serial number, manufacturer, and device info. A default WinPE image may not include PowerShell or WMIC.
+
+`WinPE-HTA` enables the branded Origin kiosk-style interface with the transparent logo. If it is unavailable, the launcher falls back to the polished console interface without changing capture or CSV behavior.
 
 ## 9. Test On Surface Go 2
 

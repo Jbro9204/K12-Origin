@@ -1,0 +1,369 @@
+<!doctype html>
+<html>
+<head>
+<title>Origin Capture Lite</title>
+<meta http-equiv="X-UA-Compatible" content="IE=11">
+<hta:application
+  applicationname="Origin Capture Lite"
+  border="none"
+  caption="no"
+  contextmenu="no"
+  maximizebutton="no"
+  minimizebutton="no"
+  scroll="no"
+  selection="no"
+  showintaskbar="yes"
+  singleinstance="yes"
+  sysmenu="no"
+  windowstate="maximize" />
+<style>
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #070a0f;
+  color: #eef6ff;
+  font-family: Segoe UI, Arial, sans-serif;
+}
+body {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(0, 174, 255, .18), transparent 28%),
+    linear-gradient(145deg, #05070b 0%, #111821 45%, #07090e 100%);
+}
+.shell {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 42px 56px 28px;
+  position: relative;
+}
+.header {
+  border-bottom: 1px solid rgba(109, 196, 255, .24);
+  padding-bottom: 26px;
+  min-height: 116px;
+}
+.logo {
+  float: left;
+  width: 168px;
+  height: auto;
+  max-height: 112px;
+  margin-right: 28px;
+}
+.title {
+  font-size: 48px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: #f7fbff;
+}
+.subtitle {
+  margin-top: 10px;
+  font-size: 23px;
+  color: #9adfff;
+}
+.main {
+  clear: both;
+  margin-top: 34px;
+  width: 100%;
+  overflow: hidden;
+}
+.panel {
+  box-sizing: border-box;
+  float: left;
+  width: 48%;
+  min-height: 390px;
+  margin-right: 2%;
+  border: 1px solid rgba(140, 206, 255, .22);
+  background: linear-gradient(180deg, rgba(35, 44, 56, .92), rgba(12, 17, 24, .94));
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .34);
+  padding: 34px;
+}
+.status-label {
+  font-size: 18px;
+  color: #88d8ff;
+  text-transform: uppercase;
+}
+.status {
+  margin-top: 16px;
+  font-size: 58px;
+  line-height: 1;
+  font-weight: 800;
+  color: #36c8ff;
+}
+.message {
+  margin-top: 20px;
+  font-size: 25px;
+  color: #edf7ff;
+}
+.subtext {
+  margin-top: 12px;
+  font-size: 18px;
+  color: #b8c6d4;
+}
+.data-title {
+  font-size: 20px;
+  color: #f4f8fb;
+  margin-bottom: 20px;
+}
+.row {
+  padding: 13px 0;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  font-size: 19px;
+  clear: both;
+  overflow: hidden;
+}
+.label {
+  float: left;
+  width: 150px;
+  color: #95a6b7;
+}
+.value {
+  margin-left: 168px;
+  color: #ffffff;
+  word-break: break-all;
+}
+.actions {
+  margin-top: 26px;
+  display: none;
+}
+button {
+  border: 1px solid rgba(111, 209, 255, .52);
+  background: #102536;
+  color: #ffffff;
+  padding: 13px 18px;
+  font-size: 16px;
+  margin-right: 12px;
+}
+.footer {
+  position: absolute;
+  left: 56px;
+  right: 56px;
+  bottom: 22px;
+  color: #7f8d99;
+  font-size: 14px;
+  border-top: 1px solid rgba(109, 196, 255, .16);
+  padding-top: 16px;
+}
+.footer div:first-child {
+  float: left;
+}
+.footer div:last-child {
+  float: right;
+  color: #aab7c4;
+}
+.success .status { color: #51e38a; }
+.duplicate .status, .review .status { color: #ffca55; }
+.failed .status, .outputMissing .status { color: #ff5d5d; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="header">
+    <img class="logo" src="assets/New Origin Trans.png" alt="Origin">
+    <div>
+      <div class="title">ORIGIN CAPTURE LITE</div>
+      <div class="subtitle">Device Identity &amp; Serialization Capture</div>
+    </div>
+  </div>
+  <div class="main" id="main">
+    <div class="panel">
+      <div class="status-label">Current State</div>
+      <div class="status" id="state">READY</div>
+      <div class="message" id="message">Ready to capture device identity.</div>
+      <div class="subtext" id="subtext">Origin Capture Lite is ready. Capture will begin automatically.</div>
+      <div class="actions" id="actions">
+        <button language="VBScript" onclick="StartCapture">Retry Capture</button>
+        <button language="VBScript" onclick="ExitShell">Exit</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="data-title">Captured Device Identity</div>
+      <div class="row"><div class="label">Serial Number</div><div class="value" id="serial">Pending</div></div>
+      <div class="row"><div class="label">Manufacturer</div><div class="value" id="manufacturer">Pending</div></div>
+      <div class="row"><div class="label">Model</div><div class="value" id="model">Pending</div></div>
+      <div class="row"><div class="label">CSV Path</div><div class="value" id="csv">Pending</div></div>
+      <div class="row"><div class="label">Timestamp</div><div class="value" id="timestamp">Pending</div></div>
+    </div>
+  </div>
+  <div class="footer">
+    <div>Origin Capture Lite &bull; Device Identity Capture</div>
+    <div>Designed and developed by Jordan Brown | LDG Systems</div>
+  </div>
+</div>
+<script language="VBScript">
+Option Explicit
+
+Dim fso, root, captureCsv, exceptionCsv
+Set fso = CreateObject("Scripting.FileSystemObject")
+root = fso.GetParentFolderName(Unescape(Window.location.pathname))
+If Left(root, 1) = "/" Then root = Mid(root, 2)
+root = Replace(root, "/", "\")
+captureCsv = fso.BuildPath(root, "surface_release_capture.csv")
+exceptionCsv = fso.BuildPath(fso.BuildPath(root, "logs"), "exceptions.csv")
+
+Sub Window_OnLoad
+  window.setTimeout "StartCapture", 650
+End Sub
+
+Sub StartCapture
+  SetState "capturing", "CAPTURING", "Capturing device information...", "Reading Serial Number, Manufacturer, Model, and CSV Output."
+  Document.getElementById("actions").Style.Display = "none"
+  CaptureDevice
+End Sub
+
+Sub ExitShell
+  Window.Close
+End Sub
+
+Sub CaptureDevice
+  On Error Resume Next
+  If Not fso.FolderExists(fso.BuildPath(root, "logs")) Then fso.CreateFolder(fso.BuildPath(root, "logs"))
+  EnsureCsv captureCsv, "SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO"
+  EnsureCsv exceptionCsv, "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE"
+  If Err.Number <> 0 Then
+    SetOutputMissing "Origin could not locate or prepare the expected output path for CSV storage."
+    Err.Clear
+    Exit Sub
+  End If
+  On Error GoTo 0
+
+  Dim serialNumber, manufacturer, deviceInfo, messageText
+  serialNumber = FirstValue(Array(QuerySingleValue("Win32_BIOS", "SerialNumber"), QuerySingleValue("Win32_ComputerSystemProduct", "IdentifyingNumber")))
+  manufacturer = QuerySingleValue("Win32_ComputerSystem", "Manufacturer")
+  deviceInfo = QuerySingleValue("Win32_ComputerSystem", "Model")
+
+  Document.getElementById("serial").InnerText = EmptyText(serialNumber)
+  Document.getElementById("manufacturer").InnerText = EmptyText(manufacturer)
+  Document.getElementById("model").InnerText = EmptyText(deviceInfo)
+  Document.getElementById("csv").InnerText = captureCsv
+  Document.getElementById("timestamp").InnerText = Now
+
+  messageText = ""
+  If IsBlank(serialNumber) Then messageText = messageText & "Serial Number missing. "
+  If IsBlank(manufacturer) Then messageText = messageText & "Manufacturer missing. "
+  If IsBlank(deviceInfo) Then messageText = messageText & "Model missing. "
+  If Len(messageText) > 0 Then
+    LogException "CAPTURE_VALIDATION_FAILED", serialNumber, manufacturer, deviceInfo, Trim(messageText)
+    SetState "review", "REVIEW REQUIRED", "Capture completed with missing or incomplete fields.", Trim(messageText)
+    Document.getElementById("actions").Style.Display = "block"
+    Exit Sub
+  End If
+
+  If SerialExists(captureCsv, serialNumber) Then
+    LogException "DUPLICATE_SERIAL", serialNumber, manufacturer, deviceInfo, "Duplicate serial detected before append."
+    SetState "duplicate", "DUPLICATE SERIAL", "DUPLICATE SERIAL DETECTED", "This serial number already exists in the current capture output. Review before proceeding."
+    Document.getElementById("actions").Style.Display = "block"
+    Exit Sub
+  End If
+
+  AppendLine captureCsv, CsvLine(Array(serialNumber, manufacturer, deviceInfo))
+  SetState "success", "SUCCESS", "ORIGIN INFO GATHERED", "Device identity captured and saved successfully."
+  On Error Resume Next
+  CreateObject("WScript.Shell").Run "cmd /c echo " & Chr(7), 0, False
+  On Error GoTo 0
+End Sub
+
+Sub SetOutputMissing(text)
+  Document.getElementById("csv").InnerText = captureCsv
+  Document.getElementById("timestamp").InnerText = Now
+  SetState "outputMissing", "OUTPUT NOT FOUND", "OUTPUT LOCATION NOT FOUND", text & " Expected: " & captureCsv
+  Document.getElementById("actions").Style.Display = "block"
+End Sub
+
+Sub SetState(className, stateText, messageText, subText)
+  Document.getElementById("main").ClassName = "main " & className
+  Document.getElementById("state").InnerText = stateText
+  Document.getElementById("message").InnerText = messageText
+  Document.getElementById("subtext").InnerText = subText
+End Sub
+
+Function QuerySingleValue(className, propertyName)
+  On Error Resume Next
+  Dim svc, items, item, value
+  QuerySingleValue = ""
+  Set svc = GetObject("winmgmts:\\.\root\cimv2")
+  If Err.Number <> 0 Then Err.Clear: Exit Function
+  Set items = svc.ExecQuery("SELECT " & propertyName & " FROM " & className)
+  If Err.Number <> 0 Then Err.Clear: Exit Function
+  For Each item In items
+    value = Trim(CStr(item.Properties_(propertyName).Value))
+    If Len(value) > 0 Then QuerySingleValue = value: Exit Function
+  Next
+End Function
+
+Function FirstValue(values)
+  Dim i
+  FirstValue = ""
+  For i = LBound(values) To UBound(values)
+    If Not IsBlank(values(i)) Then FirstValue = Trim(CStr(values(i))): Exit Function
+  Next
+End Function
+
+Function IsBlank(value)
+  IsBlank = Len(Trim(CStr(value))) = 0
+End Function
+
+Function EmptyText(value)
+  If IsBlank(value) Then EmptyText = "Missing" Else EmptyText = CStr(value)
+End Function
+
+Sub EnsureCsv(path, header)
+  If fso.FileExists(path) Then
+    Dim current, reader, archive
+    Set reader = fso.OpenTextFile(path, 1, False)
+    If Not reader.AtEndOfStream Then current = reader.ReadLine Else current = ""
+    reader.Close
+    If current <> header Then
+      archive = path & ".old-format-" & TimestampForFile() & ".csv"
+      fso.MoveFile path, archive
+    End If
+  End If
+  If Not fso.FileExists(path) Then AppendLine path, header
+End Sub
+
+Sub AppendLine(path, line)
+  Dim file
+  Set file = fso.OpenTextFile(path, 8, True)
+  file.WriteLine line
+  file.Close
+End Sub
+
+Function SerialExists(path, serial)
+  SerialExists = False
+  If Not fso.FileExists(path) Then Exit Function
+  Dim file, line, needle
+  needle = """" & UCase(serial) & """"
+  Set file = fso.OpenTextFile(path, 1, False)
+  Do Until file.AtEndOfStream
+    line = UCase(file.ReadLine)
+    If InStr(1, line, needle, vbTextCompare) > 0 Then SerialExists = True: Exit Do
+  Loop
+  file.Close
+End Function
+
+Function CsvLine(values)
+  Dim i, output
+  output = ""
+  For i = LBound(values) To UBound(values)
+    If i > LBound(values) Then output = output & ","
+    output = output & CsvEscape(values(i))
+  Next
+  CsvLine = output
+End Function
+
+Function CsvEscape(value)
+  CsvEscape = """" & Replace(CStr(value), """", """""") & """"
+End Function
+
+Sub LogException(errorType, serial, maker, info, message)
+  AppendLine exceptionCsv, CsvLine(Array(errorType, serial, maker, info, message))
+End Sub
+
+Function TimestampForFile()
+  Dim d
+  d = Now
+  TimestampForFile = Year(d) & Right("0" & Month(d), 2) & Right("0" & Day(d), 2) & "-" & Right("0" & Hour(d), 2) & Right("0" & Minute(d), 2) & Right("0" & Second(d), 2)
+End Function
+</script>
+</body>
+</html>

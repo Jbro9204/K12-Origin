@@ -15,6 +15,8 @@ End If
 EnsureCsv captureCsv, "SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO"
 EnsureCsv exceptionCsv, "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE"
 
+ShowHeader "CAPTURING", "Capturing device information..."
+
 Dim serialNumber, manufacturer, deviceInfo
 serialNumber = FirstValue(Array( _
   QuerySingleValue("Win32_BIOS", "SerialNumber"), _
@@ -43,25 +45,18 @@ End If
 
 If SerialExists(captureCsv, serialNumber) Then
   LogException "DUPLICATE_SERIAL", serialNumber, manufacturer, deviceInfo, "Duplicate serial detected before append."
-  WScript.Echo ""
-  WScript.Echo "DUPLICATE SERIAL DETECTED"
-  WScript.Echo "Serial: " & serialNumber
-  WScript.Echo "Duplicate attempt logged. No duplicate row was added."
+  ShowHeader "DUPLICATE SERIAL", "DUPLICATE SERIAL DETECTED"
+  ShowData serialNumber, manufacturer, deviceInfo, captureCsv
+  WScript.Echo "This serial number already exists in the current capture output. Review before proceeding."
   WScript.Quit 2
 End If
 
 AppendLine captureCsv, CsvLine(Array(serialNumber, manufacturer, deviceInfo))
 
+ShowHeader "SUCCESS", "ORIGIN INFO GATHERED"
+WScript.Echo "Device identity captured and saved successfully."
 WScript.Echo ""
-WScript.Echo "========================================"
-WScript.Echo "ORIGIN INFO GATHERED"
-WScript.Echo "Capture CSV saved."
-WScript.Echo "========================================"
-WScript.Echo "Serial: " & serialNumber
-WScript.Echo "Manufacturer: " & manufacturer
-WScript.Echo "Device Info: " & deviceInfo
-WScript.Echo "Output CSV: " & captureCsv
-WScript.Echo ""
+ShowData serialNumber, manufacturer, deviceInfo, captureCsv
 WScript.Echo "It is safe to power off this device or move to the next unit."
 WScript.Quit 0
 
@@ -161,10 +156,39 @@ Sub LogException(errorType, serial, maker, info, message)
 End Sub
 
 Sub ShowFailure(message)
+  ShowHeader "FAILED CAPTURE", "CAPTURE FAILED"
+  WScript.Echo "Origin could not collect the required device information. Review this device before continuing."
   WScript.Echo ""
-  WScript.Echo "CAPTURE FAILED"
   WScript.Echo message
   WScript.Echo "Exception log was saved if the USB was writable."
+End Sub
+
+Sub ShowHeader(state, message)
+  WScript.Echo ""
+  WScript.Echo "===================================================================================================="
+  WScript.Echo " ORIGIN CAPTURE LITE"
+  WScript.Echo " Device Identity & Serialization Capture"
+  WScript.Echo "===================================================================================================="
+  WScript.Echo ""
+  WScript.Echo " STATE: " & state
+  WScript.Echo ""
+  WScript.Echo " " & message
+  WScript.Echo ""
+  WScript.Echo "----------------------------------------------------------------------------------------------------"
+  WScript.Echo ""
+  WScript.Echo " Designed and developed by Jordan Brown | LDG Systems"
+  WScript.Echo ""
+End Sub
+
+Sub ShowData(serial, maker, info, csvPath)
+  WScript.Echo " Serial Number : " & serial
+  WScript.Echo " Manufacturer  : " & maker
+  WScript.Echo " Model         : " & info
+  WScript.Echo " CSV Path      : " & csvPath
+  WScript.Echo " Timestamp     : " & Now
+  WScript.Echo ""
+  WScript.Echo "----------------------------------------------------------------------------------------------------"
+  WScript.Echo ""
 End Sub
 
 Function TimestampForFile()
