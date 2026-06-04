@@ -157,16 +157,28 @@ button {
 </style>
 <script type="text/javascript">
 var originCaptureStarted = false;
+var originCaptureAttempts = 0;
+var originMaxCaptureAttempts = 8;
 
 function startCaptureJs() {
   if (originCaptureStarted) return;
   originCaptureStarted = true;
+  originCaptureAttempts = 0;
 
   setStateJs("capturing", "CAPTURING", "Capturing device information...", "Reading Serial Number, Manufacturer, Model, and CSV Output.");
   document.getElementById("actions").style.display = "none";
 
+  window.setTimeout(runCaptureAttemptJs, 1000);
+}
+
+function runCaptureAttemptJs() {
   try {
-    captureDeviceJs();
+    originCaptureAttempts++;
+    var result = captureDeviceJs();
+    if (!result && originCaptureAttempts < originMaxCaptureAttempts) {
+      setStateJs("capturing", "CAPTURING", "Capturing device information...", "Waiting for WinPE WMI services. Attempt " + originCaptureAttempts + " of " + originMaxCaptureAttempts + ".");
+      window.setTimeout(runCaptureAttemptJs, 1500);
+    }
   } catch (err) {
     setStateJs("failed", "FAILED CAPTURE", "CAPTURE FAILED", "Origin could not complete capture. " + err.message);
     document.getElementById("actions").style.display = "block";
@@ -202,21 +214,23 @@ function captureDeviceJs() {
   if (isBlankJs(manufacturer)) messageText += "Manufacturer missing. ";
   if (isBlankJs(deviceInfo)) messageText += "Model missing. ";
   if (messageText.length > 0) {
+    if (originCaptureAttempts < originMaxCaptureAttempts) return false;
     appendLineJs(fso, exceptionCsv, csvLineJs(["CAPTURE_VALIDATION_FAILED", serialNumber, manufacturer, deviceInfo, trimJs(messageText)]));
     setStateJs("review", "REVIEW REQUIRED", "Capture completed with missing or incomplete fields.", trimJs(messageText));
     document.getElementById("actions").style.display = "block";
-    return;
+    return true;
   }
 
   if (serialExistsJs(fso, captureCsv, serialNumber)) {
     appendLineJs(fso, exceptionCsv, csvLineJs(["DUPLICATE_SERIAL", serialNumber, manufacturer, deviceInfo, "Duplicate serial detected before append."]));
     setStateJs("duplicate", "DUPLICATE SERIAL", "DUPLICATE SERIAL DETECTED", "This serial number already exists in the current capture output. Review before proceeding.");
     document.getElementById("actions").style.display = "block";
-    return;
+    return true;
   }
 
   appendLineJs(fso, captureCsv, csvLineJs([serialNumber, manufacturer, deviceInfo]));
   setStateJs("success", "SUCCESS", "ORIGIN INFO GATHERED", "Device identity captured and saved successfully.");
+  return true;
 }
 
 function getRootPathJs(fso) {
@@ -228,7 +242,8 @@ function getRootPathJs(fso) {
 
 function querySingleValueJs(className, propertyName) {
   try {
-    var svc = GetObject("winmgmts:\\\\.\\root\\cimv2");
+    var locator = new ActiveXObject("WbemScripting.SWbemLocator");
+    var svc = locator.ConnectServer(".", "root\\cimv2");
     var items = new Enumerator(svc.ExecQuery("SELECT " + propertyName + " FROM " + className));
     for (; !items.atEnd(); items.moveNext()) {
       var item = items.item();
