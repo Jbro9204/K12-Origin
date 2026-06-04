@@ -155,8 +155,169 @@ button {
 .duplicate .status, .review .status { color: #ffca55; }
 .failed .status, .outputMissing .status { color: #ff5d5d; }
 </style>
+<script type="text/javascript">
+var originCaptureStarted = false;
+
+function startCaptureJs() {
+  if (originCaptureStarted) return;
+  originCaptureStarted = true;
+
+  setStateJs("capturing", "CAPTURING", "Capturing device information...", "Reading Serial Number, Manufacturer, Model, and CSV Output.");
+  document.getElementById("actions").style.display = "none";
+
+  try {
+    captureDeviceJs();
+  } catch (err) {
+    setStateJs("failed", "FAILED CAPTURE", "CAPTURE FAILED", "Origin could not complete capture. " + err.message);
+    document.getElementById("actions").style.display = "block";
+  }
+}
+
+function captureDeviceJs() {
+  var fso = new ActiveXObject("Scripting.FileSystemObject");
+  var root = getRootPathJs(fso);
+  var logsPath = fso.BuildPath(root, "logs");
+  var captureCsv = fso.BuildPath(root, "surface_release_capture.csv");
+  var exceptionCsv = fso.BuildPath(logsPath, "exceptions.csv");
+
+  if (!fso.FolderExists(logsPath)) fso.CreateFolder(logsPath);
+  ensureCsvJs(fso, captureCsv, "SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO");
+  ensureCsvJs(fso, exceptionCsv, "ERROR_TYPE,SERIAL_NUMBER,MANUFACTURER,DEVICE_INFO,ERROR_MESSAGE");
+
+  var serialNumber = firstValueJs([
+    querySingleValueJs("Win32_BIOS", "SerialNumber"),
+    querySingleValueJs("Win32_ComputerSystemProduct", "IdentifyingNumber")
+  ]);
+  var manufacturer = querySingleValueJs("Win32_ComputerSystem", "Manufacturer");
+  var deviceInfo = querySingleValueJs("Win32_ComputerSystem", "Model");
+
+  document.getElementById("serial").innerText = emptyTextJs(serialNumber);
+  document.getElementById("manufacturer").innerText = emptyTextJs(manufacturer);
+  document.getElementById("model").innerText = emptyTextJs(deviceInfo);
+  document.getElementById("csv").innerText = "Connected";
+  document.getElementById("timestamp").innerText = new Date().toLocaleString();
+
+  var messageText = "";
+  if (isBlankJs(serialNumber)) messageText += "Serial Number missing. ";
+  if (isBlankJs(manufacturer)) messageText += "Manufacturer missing. ";
+  if (isBlankJs(deviceInfo)) messageText += "Model missing. ";
+  if (messageText.length > 0) {
+    appendLineJs(fso, exceptionCsv, csvLineJs(["CAPTURE_VALIDATION_FAILED", serialNumber, manufacturer, deviceInfo, trimJs(messageText)]));
+    setStateJs("review", "REVIEW REQUIRED", "Capture completed with missing or incomplete fields.", trimJs(messageText));
+    document.getElementById("actions").style.display = "block";
+    return;
+  }
+
+  if (serialExistsJs(fso, captureCsv, serialNumber)) {
+    appendLineJs(fso, exceptionCsv, csvLineJs(["DUPLICATE_SERIAL", serialNumber, manufacturer, deviceInfo, "Duplicate serial detected before append."]));
+    setStateJs("duplicate", "DUPLICATE SERIAL", "DUPLICATE SERIAL DETECTED", "This serial number already exists in the current capture output. Review before proceeding.");
+    document.getElementById("actions").style.display = "block";
+    return;
+  }
+
+  appendLineJs(fso, captureCsv, csvLineJs([serialNumber, manufacturer, deviceInfo]));
+  setStateJs("success", "SUCCESS", "ORIGIN INFO GATHERED", "Device identity captured and saved successfully.");
+}
+
+function getRootPathJs(fso) {
+  var path = decodeURIComponent(window.location.pathname);
+  if (path.charAt(0) === "/") path = path.substring(1);
+  path = path.replace(/\//g, "\\");
+  return fso.GetParentFolderName(path);
+}
+
+function querySingleValueJs(className, propertyName) {
+  try {
+    var svc = GetObject("winmgmts:\\\\.\\root\\cimv2");
+    var items = new Enumerator(svc.ExecQuery("SELECT " + propertyName + " FROM " + className));
+    for (; !items.atEnd(); items.moveNext()) {
+      var item = items.item();
+      var value = item.Properties_(propertyName).Value;
+      if (value !== null && value !== undefined) {
+        value = trimJs(String(value));
+        if (value.length > 0) return value;
+      }
+    }
+  } catch (err) {}
+  return "";
+}
+
+function firstValueJs(values) {
+  for (var i = 0; i < values.length; i++) {
+    if (!isBlankJs(values[i])) return trimJs(values[i]);
+  }
+  return "";
+}
+
+function ensureCsvJs(fso, path, header) {
+  if (fso.FileExists(path)) {
+    var reader = fso.OpenTextFile(path, 1, false);
+    var current = reader.AtEndOfStream ? "" : reader.ReadLine();
+    reader.Close();
+    if (current !== header) {
+      fso.MoveFile(path, path + ".old-format-" + timestampForFileJs() + ".csv");
+    }
+  }
+  if (!fso.FileExists(path)) appendLineJs(fso, path, header);
+}
+
+function appendLineJs(fso, path, line) {
+  var file = fso.OpenTextFile(path, 8, true);
+  file.WriteLine(line);
+  file.Close();
+}
+
+function serialExistsJs(fso, path, serial) {
+  if (!fso.FileExists(path)) return false;
+  var needle = '"' + String(serial).toUpperCase() + '"';
+  var file = fso.OpenTextFile(path, 1, false);
+  while (!file.AtEndOfStream) {
+    if (file.ReadLine().toUpperCase().indexOf(needle) >= 0) {
+      file.Close();
+      return true;
+    }
+  }
+  file.Close();
+  return false;
+}
+
+function csvLineJs(values) {
+  var out = [];
+  for (var i = 0; i < values.length; i++) out.push(csvEscapeJs(values[i]));
+  return out.join(",");
+}
+
+function csvEscapeJs(value) {
+  return '"' + String(value).replace(/"/g, '""') + '"';
+}
+
+function isBlankJs(value) {
+  return trimJs(String(value || "")).length === 0;
+}
+
+function trimJs(value) {
+  return String(value).replace(/^\s+|\s+$/g, "");
+}
+
+function emptyTextJs(value) {
+  return isBlankJs(value) ? "Missing" : String(value);
+}
+
+function setStateJs(className, stateText, messageText, subText) {
+  document.getElementById("main").className = "main " + className;
+  document.getElementById("state").innerText = stateText;
+  document.getElementById("message").innerText = messageText;
+  document.getElementById("subtext").innerText = subText;
+}
+
+function timestampForFileJs() {
+  var d = new Date();
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+  return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + "-" + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+}
+</script>
 </head>
-<body>
+<body onload="startCaptureJs()">
 <div class="shell">
   <div class="header">
     <img class="logo" src="assets/New Origin Trans.png" alt="Origin">
@@ -172,8 +333,8 @@ button {
       <div class="message" id="message">Ready to capture device identity.</div>
       <div class="subtext" id="subtext">Origin Capture Lite is ready. Capture will begin automatically.</div>
       <div class="actions" id="actions">
-        <button language="VBScript" onclick="StartCapture">Retry Capture</button>
-        <button language="VBScript" onclick="ExitShell">Exit</button>
+        <button onclick="originCaptureStarted=false; startCaptureJs();">Retry Capture</button>
+        <button onclick="window.close();">Exit</button>
       </div>
     </div>
     <div class="panel">
@@ -190,7 +351,7 @@ button {
     <div>Designed and developed by Jordan Brown | LDG Systems</div>
   </div>
 </div>
-<script language="VBScript">
+<script type="text/vbscript-disabled">
 Option Explicit
 
 Dim fso, root, captureCsv, exceptionCsv, captureStarted
